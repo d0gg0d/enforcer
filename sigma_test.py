@@ -1,12 +1,17 @@
 #!/usr/bin/env python3
 import yaml
 import uuid
+import configparser
+from datetime import date
 
 ref_keys = ['title', 'id', 'status', 'description', 'references', 'author', 'date', 'modified', 'logsource', 'detection', 'falsepositives', 'tags', 'level']
 
+config = configparser.ConfigParser()
+config.read('config.txt')
+name = config['Default']['Name']
+
 def authorAdd(data):
     prepend = ', '
-    name = 'Richard Han'
     data['author'] = data['author'] + prepend + name
     return data
 
@@ -22,14 +27,27 @@ def sigmaSort(data):
         new_order[k] = data[k]
     return new_order
 
+def statusExperimental(data):
+    data['status'] = 'experimental'
+    return data
+
+def dateAdd(data):
+    today = date.today()
+    currentDate = today.strftime("%Y/%m/%d")
+    data['date'] = currentDate
+    return data
+
 def newSigma():
     ruleName = 'new_rule.yml'
     with open(ruleName,'w') as output:
         for ref in ref_keys:
-            output.write(ref+': \n')
+            output.write(ref +': \r')
     with open(ruleName) as f:
         data = yaml.load(f, Loader=yaml.loader.FullLoader)
         uuidAdd(data)
+        statusExperimental(data)
+        authorAdd(data)
+        dateAdd(data)
     with open(ruleName, 'w') as output:
         yaml.dump(data, output, sort_keys=False, default_flow_style=False,indent=1)
 
@@ -58,6 +76,9 @@ def tagSearch(data, tagName):
 #         yaml.dump(data,o, sort_keys=False, default_flow_style=False)
 # print("done")
 
+
+
+
 with open('test.yml') as f:
     data = yaml.load(f, Loader=yaml.loader.FullLoader)
     #print(data.keys())
@@ -66,6 +87,8 @@ with open('test.yml') as f:
     data = uuidAdd(data)
     newSigma()
     tagSearch(data, 'attack.t1003')
+
+    print(name)
     
     #print(data.keys())
     #print(data)
